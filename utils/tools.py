@@ -103,4 +103,4 @@ def print_solution_df(cells_p, cells_m, machine_part_matrix):
     df = pd.DataFrame(machine_part_matrix)
     df = df[list_cells_p]
     return df.T[list_cells_m].T
-    
+

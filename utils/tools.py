@@ -6,9 +6,9 @@ from algorithm.base import Algorithm
 import collections
 import itertools
 
-def get_solution(machine_part_matrix):
+def get_solution(machine_part_matrix, numb_of_cells):
     similarity_matrix, np_similarity = get_similarity_pairs(machine_part_matrix)
-    cells_p = get_assignments_by_parts(np_similarity)
+    cells_p = get_assignments_by_parts(np_similarity, numb_of_cells)
     cells_m = get_asignments_by_machine(machine_part_matrix, cells_p)
     return cells_p, cells_m
 
@@ -33,27 +33,27 @@ def get_asignments_by_machine(machine_part_matrix, cells_p):
         cell_num = np.argmin([get_v_e_sum(line, cell) for cell in cells_p.values()])
         if (ind == len(machine_part_matrix) - 1):
             empty_cell_num = [i for i,x in enumerate(list(cells_m.values())) if not x]
-            #print(empty_cell_num)
-            cell_num = empty_cell_num[0]
+            if (empty_cell_num):
+                cell_num = empty_cell_num[0]
         cells_m[cell_num].append(ind)
         bit_mask[cell_num]+=1
     return remove_empty_keys(cells_m)
 
-def get_assignments_by_parts(similarity_pairs):
+def get_assignments_by_parts(similarity_pairs, numb_of_cells):
     def get_index_by_key(d, k):
         try:
             return [key for key, corresponding_list in d.items() if k in corresponding_list][0]
         except IndexError:
             return -1
-    cells_p = {k: [] for k in range(len(similarity_pairs))}
+    cells_p = {k: [] for k in range(numb_of_cells)}
     for ind, pair in enumerate(similarity_pairs):
         empty_list = 0
         slice_cells_p = dict(itertools.islice(cells_p.items(), ind)) #для поиска только в предыдущих ячейках
         first_key = get_index_by_key(slice_cells_p, pair[0][0])
         second_key = get_index_by_key(slice_cells_p, pair[0][1])
         if first_key == -1 and second_key == -1:
-            cells_p[ind].append(pair[0][0])
-            cells_p[ind].append(pair[0][1])
+            cells_p[ind % numb_of_cells].append(pair[0][0])
+            cells_p[ind % numb_of_cells].append(pair[0][1])
         elif first_key == -1:
             cells_p[second_key].append(pair[0][0])
         elif second_key == -1:
@@ -61,6 +61,16 @@ def get_assignments_by_parts(similarity_pairs):
         else:
             continue
     return remove_empty_keys(cells_p)
+
+def compute_grouping_efficacy(cells_p, cells_m, solution_df):
+    n_1 = solution_df.sum().sum()
+    n_1_in, n_0_in = 0, 0
+    for i in range(len(cells_m)):
+        sub_df = solution_df[cells_p[i]].T[cells_m[i]].T
+        n_1_in += sub_df.sum().sum()
+        n_0_in += sub_df.size - sub_df.sum().sum()
+    n_1_out = n_1 - n_1_in
+    return (n_1 - n_1_out)/(n_1 + n_0_in)
 
 def get_data(path):
     with open(path, 'r') as f:
@@ -97,7 +107,7 @@ def get_similarity_pairs(machine_part_matrix):
     similarity_pairs.sort(key=lambda x: -x[1])
     return similarity_matrix, similarity_pairs
 
-def print_solution_df(cells_p, cells_m, machine_part_matrix):
+def solution_df(cells_p, cells_m, machine_part_matrix):
     list_cells_m = list(itertools.chain.from_iterable(list(cells_m.values())))
     list_cells_p = list(itertools.chain.from_iterable(list(cells_p.values())))
     df = pd.DataFrame(machine_part_matrix)

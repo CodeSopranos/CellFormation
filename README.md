@@ -14,7 +14,7 @@ The research work on **Cell Formation** algorithms solving *manufacturing cell f
 
 ***benchmarks:*** ```./data```
  
-- initial temperature ($T_f$) : $10$ 
+- initial temperature ($$T_f$$) : $10$ 
 - final temperature ($T_0$)   : $0.002$
 - chain len ($L$)             : $4$
 - len of period ($D$)         : $6$

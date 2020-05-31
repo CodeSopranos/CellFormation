@@ -79,7 +79,7 @@ def get_data(path):
     machine_part_matrix = np.zeros((file[0][0] + 1, file[0][1] + 1), int)
 
     for row_num, m_row in enumerate(file[1:]):
-        machine_part_matrix[row_num][[m_row]] = 1
+        machine_part_matrix[row_num][[m_row[1:]]] = 1
 
     return machine_part_matrix
 
